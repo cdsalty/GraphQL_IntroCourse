@@ -1,5 +1,6 @@
 const graphql = require('graphql');
-const _ = require('lodash');  // helper function to work with collections of data.
+// const _ = require('lodash');  // helper function to work with collections of data.
+const axios = require('axios');
 
 
 const {
@@ -10,10 +11,10 @@ const {
 } = graphql;
 
 
-const users = [
-  { id: '23', firstName: 'Bill', age: 20 },
-  { id: '47', firstName: 'Samantha', age: 21 }
-];
+// const users = [
+//   { id: '23', firstName: 'Bill', age: 20 },
+//   { id: '47', firstName: 'Samantha', age: 21 }
+// ];
 
 const UserType = new GraphQLObjectType({
   name: 'User',
@@ -31,7 +32,10 @@ const RootQuery = new GraphQLObjectType({
       type: UserType,
       args: { id: { type: GraphQLString } }, // args takes id which is passed to return a user type
       resolve(parentValue, args) {
-        return _.find(users, { id: args.id }); // lodash function (go through users, find id equal to the id when the query is made)
+        // return _.find(users, { id: args.id }); // lodash function (go through users, find id equal to the id when the query is made)
+        // Replacing with request to json-server:
+        return axios.get(`http://localhost:3000/users/${args.id}`)
+          .then(res => res.data)
       }
     }
   }
@@ -71,5 +75,14 @@ The two types, the UserType and the RootQuery, merge together into a GraphQL sch
     --> add another script under "scripts"
         --> "json:server": "json-server --watch db.json"
           - open seperate terminal, npm run json:server (make sure to test link...)
+                    --> http://localhost:3000/users
 
+
+Remember, RESOLVE must return the data that represents a user object
+  - need to make it more asynchonrous by using promises... the request will be made to express and then express will ask/check graphql; if yes, it will return the RESPONSE
+    --> inside the resolve function, make an HTTP request inside of the resolve function and return the promise.
+    -- npm install --save axios
+    - removed lodash and the users data
+
+    return to http://localhost:5000/graphql
 */
