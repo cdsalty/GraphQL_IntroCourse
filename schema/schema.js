@@ -61,4 +61,15 @@ args is an object that is called with the arguments that were passed into the or
 The two types, the UserType and the RootQuery, merge together into a GraphQL schema object and hand back to graphQL middleware inside server.js
   - import GraphQLSchema which takes in a RootQuery and returns a graphQL schema instance
 
+
+  **
+  Using Data:
+  https://github.com/typicode/json-server
+  - npm install --save json-server
+  - create db.json
+  - must be started seperatly, outside my users app in order to mock using mulitple databases
+    --> add another script under "scripts"
+        --> "json:server": "json-server --watch db.json"
+          - open seperate terminal, npm run json:server (make sure to test link...)
+
 */
