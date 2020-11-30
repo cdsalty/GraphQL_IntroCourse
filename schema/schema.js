@@ -16,12 +16,27 @@ const {
 //   { id: '47', firstName: 'Samantha', age: 21 }
 // ];
 
+// Order of definition matters, CompanyType must come first
+const CompanyType = new GraphQLObjectType({
+  name: 'Company',
+  feilds: {
+    id: { type: GraphQLString },
+    name: { type: GraphQLString },
+    description: { type: GraphQLString }
+  }
+})
+
+
 const UserType = new GraphQLObjectType({
   name: 'User',
   fields: {
     id: { type: GraphQLString },
     firstName: { type: GraphQLString },
-    age: { type: GraphQLInt }
+    age: { type: GraphQLInt },
+    company: {
+      type: CompanyType
+
+    }
   }
 })
 
@@ -85,4 +100,29 @@ Remember, RESOLVE must return the data that represents a user object
     - removed lodash and the users data
 
     return to http://localhost:5000/graphql
+    QUERY:
+      {
+        user(id: "40") {
+          firstName
+        }
+      }
+          -> now returning data from the database of json:server
+
+- Resolve is a playground for fetching data any piece of data
+
+
+--------------------
+
+Next: Relating company with a user
+http://localhost:3000/companies/2/users
+- this is all based on the id set in the args that created the relationship.
+
+After adding companyType, need to consider the relationships...
+- Treat associations between types to get an association between companyType and the userType
+--> To create a link between company and user types, go inside the USERTYPE and add a company field of CompanyType. This creates the link/relationship.
+      - company: { type: CompanyType }
+
+
+
+
 */
