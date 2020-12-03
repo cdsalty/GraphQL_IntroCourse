@@ -19,7 +19,7 @@ const {
 // Order of definition matters, CompanyType must come first
 const CompanyType = new GraphQLObjectType({
   name: 'Company',
-  feilds: {
+  fields: {
     id: { type: GraphQLString },
     name: { type: GraphQLString },
     description: { type: GraphQLString }
@@ -33,10 +33,12 @@ const UserType = new GraphQLObjectType({
     id: { type: GraphQLString },
     firstName: { type: GraphQLString },
     age: { type: GraphQLInt },
-    company: {  // how company here and not companyId ??
+    company: {
       type: CompanyType,
-      resolve(parentValue, args) {  // Need to return the company associated with the given user from the resolve function
-        console.log(parentValue, args);
+      resolve(parentValue, args) {
+        console.log(parentValue, args); //  { id: '40', firstName: 'Alex', age: 30, companyId: '2' }
+        return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`)
+          .then(res => res.data);
       }
     }
   }
@@ -130,5 +132,14 @@ After adding companyType, need to consider the relationships...
 
 THE NEXT PART: How to take a user, such as user with ID 23 and find their associated company. Tell graphQL how to walk between the two
 
+company: {
+      type: CompanyType,
+      resolve(parentValue, args) {
+        console.log(parentValue, args); //  { id: '40', firstName: 'Alex', age: 30, companyId: '2' }
+        return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`)
+          .then(res => res.data);
+      }
+    }
 
+    and this now allows you pull this api data point from graphiql
 */
