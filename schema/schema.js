@@ -7,7 +7,7 @@ const {
   GraphQLObjectType,
   GraphQLString,
   GraphQLInt,
-  GraphQLSchema
+  GraphQLSchema // takes the RootQuery and returns an Graph schema instance
 } = graphql;
 
 
@@ -26,16 +26,18 @@ const CompanyType = new GraphQLObjectType({
   }
 })
 
-
+// a UserType represents a "user"; every user will have an id, firstName, age, etc. 
 const UserType = new GraphQLObjectType({
   name: 'User',
   fields: {
     id: { type: GraphQLString },
     firstName: { type: GraphQLString },
     age: { type: GraphQLInt },
-    company: {
-      type: CompanyType
-
+    company: {  // how company here and not companyId ??
+      type: CompanyType,
+      resolve(parentValue, args) {  // Need to return the company associated with the given user from the resolve function
+        console.log(parentValue, args);
+      }
     }
   }
 })
@@ -43,14 +45,14 @@ const UserType = new GraphQLObjectType({
 const RootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
-    user: {
+    user: { // provides access to the users info; specifically, a user id, it will return that user
       type: UserType,
-      args: { id: { type: GraphQLString } }, // args takes id which is passed to return a user type
-      resolve(parentValue, args) {
+      args: { id: { type: GraphQLString } }, // args is requiring an id
+      resolve(parentValue, args) {  // args is whatever is passed in the original inquiry.
         // return _.find(users, { id: args.id }); // lodash function (go through users, find id equal to the id when the query is made)
-        // Replacing with request to json-server:
+        // The following is now coming from jason-server
         return axios.get(`http://localhost:3000/users/${args.id}`)
-          .then(res => res.data)
+          .then(res => res.data); // axios and graphql querk ?
       }
     }
   }
@@ -61,17 +63,21 @@ module.exports = new GraphQLSchema({
 })
 
 
+
+
+
 /*
 The Goal of the Schema file is to tell GraphQL what type of data in the application and how it's related.
 
 GraphQLObjectType: used to instruct GraphQL about the presence/idea of a USER
 
 UserType: defines the properties of the user...
-  - name & fields is required; fields very important
+  - name & fields is required; fields most important
   - name will always be a string that defines the type
   - feilds tells graphQL all of the properties a user has.
     - the keys are the names of the properties the User has
-    - all fields must have a type and each type must be imported
+    - the fields instruct graphql that every *user/etc* will have these
+      --> all fields must have a type and each type must be imported
 
 resolve (most important) is the function that goes inside the database to retrieve the data
 parentValue (not used as much and not discussed yet...)
@@ -122,7 +128,7 @@ After adding companyType, need to consider the relationships...
 --> To create a link between company and user types, go inside the USERTYPE and add a company field of CompanyType. This creates the link/relationship.
       - company: { type: CompanyType }
 
-
+THE NEXT PART: How to take a user, such as user with ID 23 and find their associated company. Tell graphQL how to walk between the two
 
 
 */
