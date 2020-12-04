@@ -7,35 +7,45 @@ const {
   GraphQLObjectType,
   GraphQLString,
   GraphQLInt,
+  GraphQLList,
   GraphQLSchema // takes the RootQuery and returns an Graph schema instance
 } = graphql;
 
 // Order of definition matters, CompanyType must come first
 const CompanyType = new GraphQLObjectType({
   name: 'Company',
-  fields: {
+  fields: () => ({  // now this function will get defined but not executed until the entire file has been excecuted. Internally, graphql will know to resolve the other types to correctly define it; it's a work around on graphql (Closures 101)
     id: { type: GraphQLString },
     name: { type: GraphQLString },
-    description: { type: GraphQLString }
-  }
+    description: { type: GraphQLString },
+    users: {
+      // can't give type UserType because we will be recieving mulitple users; Graphql needs to know to expect a LIST OF USERS by using GraphQLList and pass it the CompanyType
+      type: new GraphQLList(UserType),  // this variable is assigned in the UserType
+      // will not need a particular argument here since we're getting back a list of names based off the company that's been provided/entered; only a resolve
+      resolve(parentValue, args) {  // to get a reference to the companies, log out the parentValue
+        return axios.get(`http://localhost:3000/companies/${parentValue.id}/users`)
+          .then(res => res.data);
+      }
+    }
+  })
 })
 
 // a UserType represents a "user"; every user will have an id, firstName, age, etc. 
 const UserType = new GraphQLObjectType({
   name: 'User',
-  fields: {
+  fields: () => ({
     id: { type: GraphQLString },
     firstName: { type: GraphQLString },
     age: { type: GraphQLInt },
     company: {
       type: CompanyType,
       resolve(parentValue, args) {
-        console.log(parentValue, args); //  { id: '40', firstName: 'Alex', age: 30, companyId: '2' }
+        // console.log(parentValue, args); //  { id: '40', firstName: 'Alex', age: 30, companyId: '2' }
         return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`)
           .then(res => res.data);
       }
     }
-  }
+  })
 })
 
 const RootQuery = new GraphQLObjectType({
@@ -156,6 +166,94 @@ How to go to a company directly?
     --> By adding on another field to the root query type called 'company'
       - the 'company' will be a sibling to user
       - the setup will somewhat mimic the data from getting the UserType.
+
+          company: {
+            type: CompanyType,
+            args: { id: { type: GraphQLString } },  // arguement expected to be passed in, id
+            // make the action happen with resolve; create ability to search only companies.
+            resolve(parentValue, args) {
+              return axios.get(`http://localhost:3000/companies/${args.id}`)
+                .then(res => res.data);
+          }
+        }
+
+    - now have a problem that is opposite as before... if we seach in company for a users 'firstname', we get an error
+          --> WHY? You can't query a field of 'users' on a type 'Company'
+          - Turns out, this definition to create this relationship hasn't been established
+
+    CURRENT SETUP
+
+        RootQuery: - user and to company
+          - user can go to company
+          - company can't go to user.
+
+    - EVERY COMPANY WILL HAVE MULTIPLE USERS
+        - the goal is to create the functionality that we can go through company and pull out mulitple/list of Users
+          - ONE: check out the json:server and determine how to get the list of users given in a company id.
+                - localhost3000/companies/1/users is the test route
+                - localhost3000/companies/2/users
+                --> now that you know to get a list of users who are associated with the company from json:server, need to update the schema file to teach
+                    the companyType how to go from a company over to a list of users
+          - TWO: (inside the companyType)
+            - add a new key, 'users' and set it to be an object
+              - users: {
+
+              }
+
+
+              How to deal with type new GraphQLList(UserType) which is an issue caused because UserType hasn't been declared yet. To get around
+              this, go inisde companytype and set fields equal to an anoyomous function
+
+              fields: () => ({
+                id: { type: GraphQLString },
+                name: { type: GraphQLString },
+                description: { type: GraphQLString },
+                users: {
+                  type: new GraphQLList(UserType),  // this variable is assigned in the UserType
+                  resolve(parentValue, args) {  // to get a reference to the companies, log out the parentValue
+                    console.log("Company logging details of users through parentValue:" + parentValue) // add the parentValue inside the url to get users
+                    return axios.get(`http://localhost:3000/companies/${parentValue.id}/users`)
+                      .then(res => res.data);
+                  }
+                }
+              })
+
+    Graphiql:
+      company(id: "1"){
+        name
+        id
+        description
+        users {
+          firstName
+        }
+      }
+    }
+also: really go far out:
+{
+  company(id: "1"){
+    name
+    id
+    description
+    users {
+      firstName
+      age
+      company {
+        name
+        users {
+          firstName
+        }
+      }
+    }
+  }
+}
+
+
+____________________________________________________________________________________________________
+
+Syntax with Query Fragments
+
+
+
 
 
 
