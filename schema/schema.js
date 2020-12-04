@@ -10,12 +10,6 @@ const {
   GraphQLSchema // takes the RootQuery and returns an Graph schema instance
 } = graphql;
 
-
-// const users = [
-//   { id: '23', firstName: 'Bill', age: 20 },
-//   { id: '47', firstName: 'Samantha', age: 21 }
-// ];
-
 // Order of definition matters, CompanyType must come first
 const CompanyType = new GraphQLObjectType({
   name: 'Company',
@@ -55,6 +49,16 @@ const RootQuery = new GraphQLObjectType({
         // The following is now coming from jason-server
         return axios.get(`http://localhost:3000/users/${args.id}`)
           .then(res => res.data); // axios and graphql querk ?
+      }
+    },
+    // Adding the company as a sibling
+    company: {
+      type: CompanyType,
+      args: { id: { type: GraphQLString } },  // arguement expected to be passed in, id
+      // make the action happen with resolve; create ability to search only companies.
+      resolve(parentValue, args) {
+        return axios.get(`http://localhost:3000/companies/${args.id}`)
+          .then(res => res.data);
       }
     }
   }
@@ -142,4 +146,18 @@ company: {
     }
 
     and this now allows you pull this api data point from graphiql
+
+
+____________________________________________________________________________________________________________________________________
+Currently, the way it's setup, I am unable to retrieve the company(ies); This is due to the root query pointing directly to Users and then
+the User will point to a company. No ability to go directly to a company.
+
+How to go to a company directly?
+    --> By adding on another field to the root query type called 'company'
+      - the 'company' will be a sibling to user
+      - the setup will somewhat mimic the data from getting the UserType.
+
+
+
+
 */
