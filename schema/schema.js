@@ -2,7 +2,6 @@ const graphql = require('graphql');
 // const _ = require('lodash');  // helper function to work with collections of data.
 const axios = require('axios');
 
-
 const {
   GraphQLObjectType,
   GraphQLString,
@@ -19,9 +18,8 @@ const CompanyType = new GraphQLObjectType({
     name: { type: GraphQLString },
     description: { type: GraphQLString },
     users: {
-      // can't give type UserType because we will be recieving mulitple users; Graphql needs to know to expect a LIST OF USERS by using GraphQLList and pass it the CompanyType
-      type: new GraphQLList(UserType),  // this variable is assigned in the UserType
-      // will not need a particular argument here since we're getting back a list of names based off the company that's been provided/entered; only a resolve
+      type: new GraphQLList(UserType),  // informing graphql to expect a list of users
+      // don't need an argument; just getting back a list of names based from the company that's been provided/entered; 
       resolve(parentValue, args) {  // to get a reference to the companies, log out the parentValue
         return axios.get(`http://localhost:3000/companies/${parentValue.id}/users`)
           .then(res => res.data);
@@ -30,10 +28,10 @@ const CompanyType = new GraphQLObjectType({
   })
 })
 
-// a UserType represents a "user"; every user will have an id, firstName, age, etc. 
+// a UserType       represents a "user"; every user will have an id, firstName, age, etc. 
 const UserType = new GraphQLObjectType({
   name: 'User',
-  fields: () => ({
+  fields: () => ({ // anonymous function to prevent order of operations error
     id: { type: GraphQLString },
     firstName: { type: GraphQLString },
     age: { type: GraphQLInt },
@@ -48,9 +46,12 @@ const UserType = new GraphQLObjectType({
   })
 })
 
+
+
 const RootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
+    // user
     user: { // provides access to the users info; specifically, a user id, it will return that user
       type: UserType,
       args: { id: { type: GraphQLString } }, // args is requiring an id
@@ -73,6 +74,28 @@ const RootQuery = new GraphQLObjectType({
     }
   }
 });
+
+// MUTATION(s)
+const mutation = new GraphQLObjectType({
+  name: 'Mutation',
+  fields: {
+    // add the name of the operation
+    addUser: {
+      type: UserType, // the type here must reflect the type of data you expect back after the resolve function is ran. Sometimes the data and the type won't be the same.
+      args: { // args will be the data you expect to be given to whatever the function should do... here, addUser   
+        firstName: { type: GraphQLString },
+        age: { type: GraphQLInt },
+        companyId: { type: GraphQLString }
+      },
+      resolve() {
+
+      }
+    }
+  }
+
+});
+
+
 
 module.exports = new GraphQLSchema({
   query: RootQuery
@@ -203,7 +226,7 @@ How to go to a company directly?
 
               How to deal with type new GraphQLList(UserType) which is an issue caused because UserType hasn't been declared yet. To get around
               this, go inisde companytype and set fields equal to an anoyomous function
-
+              -> used to prevent an order of operations error it will render otherwise
               fields: () => ({
                 id: { type: GraphQLString },
                 name: { type: GraphQLString },
@@ -251,11 +274,47 @@ also: really go far out:
 ____________________________________________________________________________________________________
 
 Syntax with Query Fragments
+- allows you to name a graphiql query; has more uses on the front-end.
+query findCompany{
+  company(id: "1"){
+    id
+  }
+}
+- the opening brackets of graphiql should be thought of as the overall query is being sent to the 'root-query type'.
+  ->  {
+        comapany(id: "1"){  <--- on the root-query type, we are asking for something from the company or user depending on the query
 
+        }
+      }
 
+  - to get multiple results from one query such as company, you must lable/name the company field
+        -> {
+            comapany(id: "1"){  <--- won't work
+            // THE SOLUTION
+            apple: company(id: "1") {
 
+            }
+            banana: company(id: "2")
+            }
+          }
 
+  * Query Fragments: a list of different properties that you want access too. Also helps make the code DRY
+  fragment companyDetails on Company {
+    id
+    name
+    description
+  }
+  *** AND THEN, REPLACE THE DATA IN GRAPHIQL WITH ' ...COMPANYDETAILS '
+  --> {
+        apple:company(id: "1"){
+          ...companyDetails       <--------------- query fragments
+        }
+        google:company(id: "2"){
+          ...companyDetails       <--------------- query fragments
+        }
+      }
 
+25. MUTATIONS
 
 
 */
