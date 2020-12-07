@@ -90,7 +90,7 @@ const mutation = new GraphQLObjectType({
       },
       // resolve(parentValue, args) {  //  <-----> args is made up of firstName, age, companyId so be user to destructure 
       resolve(parentValue, { firstName, age }) {
-        return axios.post('http://localhost:3000/users', { firstName, age })
+        return axios.post('http://localhost:3000/users', { firstName, age })  // when it responds, it will respond with the details on the server's side
           .then((res) => res.data);
       }
     }
@@ -319,6 +319,35 @@ query findCompany{
       }
 
 25. MUTATIONS
+    - inside args, to require a field of text to be entered, use: firstName: { type: new GraphQLNonNull(GraphQLString) } as example
+    - export mutation at bottom
+    - in the docs panel of graphQL, you should see Mutation with the schema created. (the ' ! ' means it is requred)
 
+  * when using mutations,you must ask for some properties coming back form it, such as the id, firstName, age... What comes back is WHAT WAS R E S O L V E D when it is created *
+    - to write a mutation in graphQL, include 'mutation'
+      -> mutation {
+          addUser(firstName: "Daisy", age: 26){
+
+          }
+        }
+
+mutation {
+  addUser(firstName:"Jennifer", age:26) {
+    id
+    firstName
+    age
+  }
+}
+
+followed by...
+{
+  "data": {
+    "addUser": {
+      "id": "paGQpNN",
+      "firstName": "Jennifer",
+      "age": 26
+    }
+  }
+}
 
 */
