@@ -7,6 +7,7 @@ const {
   GraphQLString,
   GraphQLInt,
   GraphQLList,
+  GraphQLNonNull,
   GraphQLSchema // takes the RootQuery and returns an Graph schema instance
 } = graphql;
 
@@ -79,16 +80,18 @@ const RootQuery = new GraphQLObjectType({
 const mutation = new GraphQLObjectType({
   name: 'Mutation',
   fields: {
-    // add the name of the operation
+    // ADD A USER
     addUser: {
       type: UserType, // the type here must reflect the type of data you expect back after the resolve function is ran. Sometimes the data and the type won't be the same.
-      args: { // args will be the data you expect to be given to whatever the function should do... here, addUser   
-        firstName: { type: GraphQLString },
-        age: { type: GraphQLInt },
+      args: { // args will be the data you expect to be given / the function goal such as, addUser   
+        firstName: { type: new GraphQLNonNull(GraphQLString) }, // to require this property, use GraphQLNonNull
+        age: { type: new GraphQLNonNull(GraphQLInt) },
         companyId: { type: GraphQLString }
       },
-      resolve() {
-
+      // resolve(parentValue, args) {  //  <-----> args is made up of firstName, age, companyId so be user to destructure 
+      resolve(parentValue, { firstName, age }) {
+        return axios.post('http://localhost:3000/users', { firstName, age })
+          .then((res) => res.data);
       }
     }
   }
@@ -98,7 +101,8 @@ const mutation = new GraphQLObjectType({
 
 
 module.exports = new GraphQLSchema({
-  query: RootQuery
+  query: RootQuery,
+  mutation: mutation
 })
 
 
