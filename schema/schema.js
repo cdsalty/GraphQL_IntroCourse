@@ -82,7 +82,7 @@ const mutation = new GraphQLObjectType({
   fields: {
     // ADD A USER
     addUser: {
-      type: UserType, // the type here must reflect the type of data you expect back after the resolve function is ran. Sometimes the data and the type won't be the same.
+      type: UserType, // the type must reflect the type of data you're expecting back from the resolve function. In some cases, the data and the type won't be the same.
       args: { // args will be the data you expect to be given / the function goal such as, addUser   
         firstName: { type: new GraphQLNonNull(GraphQLString) }, // to require this property, use GraphQLNonNull
         age: { type: new GraphQLNonNull(GraphQLInt) },
@@ -91,6 +91,32 @@ const mutation = new GraphQLObjectType({
       // resolve(parentValue, args) {  //  <-----> args is made up of firstName, age, companyId so be user to destructure 
       resolve(parentValue, { firstName, age }) {
         return axios.post('http://localhost:3000/users', { firstName, age })  // when it responds, it will respond with the details on the server's side
+          .then((res) => res.data);
+      }
+    },
+    // `http://localhost:3000/users/${args.id}` 
+    deleteUser: {
+      type: UserType,
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) }
+      },
+      resolve(parentValue, { id }) {
+        return axios.delete(`http://localhost:3000/users/${id}`)  // don't need args.id with it destructured
+          .then((res) => res.data);
+      }
+    },
+
+    // Edit a User
+    editUser: {
+      type: UserType,
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        firstName: { type: GraphQLString },
+        age: { type: GraphQLInt },
+        companyId: { type: GraphQLString }
+      },
+      resolve(parentValue, args) {
+        return axios.patch(`http://localhost:3000/users/${args.id}`, args) // edit user id with the args object data
           .then((res) => res.data);
       }
     }
@@ -327,7 +353,7 @@ query findCompany{
     - to write a mutation in graphQL, include 'mutation'
       -> mutation {
           addUser(firstName: "Daisy", age: 26){
-
+            ** ANYTIME you call the mutation, you must ask then ask for some properties coming back off of it.
           }
         }
 
@@ -349,5 +375,8 @@ followed by...
     }
   }
 }
+
+
+-> when deleting a user, I get back the id: null in graphiql. This is okay. GraphQL sends the request to delete User with ID 23 to the JSON:SERVER. The JSON:SERVER completes the request but will not tell you anything about it.
 
 */
