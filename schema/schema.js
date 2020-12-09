@@ -379,4 +379,30 @@ followed by...
 
 -> when deleting a user, I get back the id: null in graphiql. This is okay. GraphQL sends the request to delete User with ID 23 to the JSON:SERVER. The JSON:SERVER completes the request but will not tell you anything about it.
 
+
+// Apollo Server vs GraphQL Express
+- the setup for the type file and the resolve files differs:
+  - Type File:
+    type User {
+      id: String!
+      firstName: String
+      age: Int
+      company: Company
+    }
+
+    type Company {
+      id: String!
+      name: String
+      employees: [User]
+    }
+
+  - Resolver(s) File
+    const resolveFunctions = {
+      Query: {
+        users() {
+          return users,
+        }
+      }
+    }
+
 */
